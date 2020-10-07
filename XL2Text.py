@@ -1,13 +1,8 @@
 import os
 from openpyxl import load_workbook
 
-path = input("Enter the full path of the .xlsx file you wish to print: ")
-directory = os.path.dirname(path)
 
-wb = load_workbook(path)
-
-
-def dumpWsToText(ws, destination):
+def dumpWsToText(ws, destination, colWidth=19):
     """
     Writes worksheet contents to text file.
 
@@ -20,16 +15,41 @@ def dumpWsToText(ws, destination):
         for row in ws.values:
             for value in row:
                 if value is None:
-                    newFile.write((' ' * 19) + " |")
+                    fill = colWidth
+                    newFile.write((' ' * fill) + " |")
                 else:
-                    if len(str(value)) >= 15:
-                        newFile.write(f"{str(value)[:16]}...".ljust(19) + " |")
+                    maxW = int(colWidth * 0.80)
+                    if len(str(value)) >= maxW:
+                        newFile.write(
+                            f"{str(value)[:maxW-1]}...".ljust(colWidth-1) + " |"
+                        )
                     else:
-                        newFile.write(str(value).ljust(19) + " |")
+                        newFile.write(str(value).ljust(colWidth) + " |")
             newFile.write("\n")
 
 
 if __name__ == "__main__":
+    path = input("Enter the full path of the .xlsx file you wish to print: ")
+    directory = os.path.dirname(path)
+
+    wb = load_workbook(path)
+
+    specifyColWidth = input(
+                        "Would you like to specify a column width? (y/n) "
+                      ).lower()
+
+    if specifyColWidth == "y":
+        customWidth = int(
+                        input(
+                          "Please specify width (in characters, default: 19): "
+                        )
+                      )
+    else:
+        customWidth = None
+
     for worksheet in wb.worksheets:
-        dumpWsToText(worksheet, directory)
+        if customWidth:
+            dumpWsToText(worksheet, directory, colWidth=customWidth)
+        else:
+            dumpWsToText(worksheet, directory)
         print(f"Wrote {worksheet.title} to {directory}.")
